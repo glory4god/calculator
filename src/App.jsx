@@ -1,9 +1,9 @@
-import "./App.css";
-import React, { useState } from "react";
-import styled from "styled-components";
-import Paper from "@material-ui/core/Paper";
-import ButtonGroup from "@material-ui/core/ButtonGroup";
-import Button from "@material-ui/core/Button";
+import './App.css';
+import React, { useState } from 'react';
+import styled from 'styled-components';
+import Paper from '@material-ui/core/Paper';
+import ButtonGroup from '@material-ui/core/ButtonGroup';
+import Button from '@material-ui/core/Button';
 
 const Root = styled.div`
   text-align: center;
@@ -29,7 +29,7 @@ const WindowNumber = styled(Paper)`
     width: 300px;
   }
 `;
-const NumberButton = styled.div`
+const NumberButtonGroup = styled.div`
   position: relative;
 
   .number-button-group {
@@ -41,80 +41,118 @@ const NumberButton = styled.div`
 `;
 
 const App = () => {
-  const [calculation, setCalculation] = useState([]);
-  const [inputValue, setInputValue] = useState("");
-  const [equal, setEqual] = useState(false);
-  const [addToValue, setAddToValue] = useState("");
-  const [sign, setSign] = useState(false);
+  const [firstNum, setFirstNum] = useState('0');
+  const [secondNum, setSecondNum] = useState(null);
+  const [operator, setOperator] = useState(null);
+  const [result, setResult] = useState(null);
 
-  const numberClick = (buNum) => {
-    if (buNum === "reset") {
-      setInputValue(() => setInputValue(""));
-      setCalculation(() => setCalculation([]));
-      setAddToValue(() => setAddToValue(""));
-      setEqual(false);
-      setSign(false);
-    } else if (buNum !== ("+" || "-" || "*" || "/")) {
-      setInputValue(() => inputValue + buNum);
-      setAddToValue(() => addToValue + buNum);
-      setEqual(false);
-      setSign(false);
+  const handleReset = () => {
+    setFirstNum('0');
+    setSecondNum(null);
+    setOperator(null);
+    setResult(null);
+  };
+
+  const handleClickOperator = (op) => {
+    if (result !== null) {
+      setFirstNum(result);
+      setResult(null);
+    }
+    setOperator(op);
+  };
+
+  const handleClickNumber = (num) => {
+    if (operator === null) {
+      if (result) setResult(null);
+      setFirstNum((prev) => {
+        if (prev === '0') {
+          if (num === '.') {
+            return '0.';
+          }
+
+          return `${num}`;
+        }
+
+        return `${prev}${num}`;
+      });
+    } else {
+      setSecondNum((prev) => {
+        if (prev === '0' || prev === null) {
+          if (num === '.') {
+            return '0.';
+          }
+
+          return `${num}`;
+        }
+
+        return `${prev}${num}`;
+      });
     }
   };
 
-  const signClick = (calculation, addToValue, buNum) => {
-    setCalculation([...calculation, addToValue, buNum]);
-    setInputValue(() => inputValue + buNum);
-    setAddToValue(() => setAddToValue(""));
-    setEqual(false);
-    setSign(true);
+  const handleCalculate = (first, second, op) => {
+    if (op === null) return;
+
+    let temp;
+    switch (op) {
+      case 'plus':
+        temp = first + second;
+        break;
+      case 'minus':
+        temp = first - second;
+        break;
+      case 'multiply':
+        temp = first * second;
+        break;
+      case 'divide':
+        temp = first / second;
+        break;
+      default:
+        return;
+    }
+
+    handleReset();
+    setResult(Number.isInteger(temp) ? String(temp) : temp.toFixed(2));
   };
-  const equalClick = (calculation, addToValue, buNum) => {
-    setCalculation([...calculation, addToValue]);
-    setAddToValue(() => setAddToValue(""));
-    setEqual(true);
-    setSign(false);
+
+  const NumberButton = ({ num }) => {
+    return (
+      <Button onClick={() => handleClickNumber(num)} className="number-button">
+        {num}
+      </Button>
+    );
   };
 
   return (
     <Root>
       <Container>
         Calculator
+        {/* <div>firstNum: {firstNum && firstNum}</div>
+        <div>secondNum: {secondNum}</div>
+        <div>operator: {operator}</div>
+        <div>result: {result && result}</div> */}
         <WindowNumber>
           <div className="value">
-            {inputValue}
-            {equal && <div>{eval(calculation.join(""))}</div>}
-            {console.log(calculation)}
+            {(() => {
+              if (result) return result;
+              if (secondNum) return secondNum;
+              return firstNum;
+            })()}
           </div>
         </WindowNumber>
-        <NumberButton>
+        <NumberButtonGroup>
           <div className="number-button-group">
             <ButtonGroup
               color="primary"
               aria-label="outlined primary button group"
             >
+              <NumberButton num={7} />
+              <NumberButton num={8} />
+              <NumberButton num={9} />
               <Button
-                onClick={() => numberClick("7")}
+                onClick={() => handleClickOperator('plus')}
                 className="number-button"
-              >
-                7
-              </Button>
-              <Button
-                onClick={() => numberClick("8")}
-                className="number-button"
-              >
-                8
-              </Button>
-              <Button
-                onClick={() => numberClick("9")}
-                className="number-button"
-              >
-                9
-              </Button>
-              <Button
-                onClick={() => signClick(calculation, addToValue, "+")}
-                className="number-button"
-                disabled={sign === true}
+                // disabled={sign === true}
               >
                 +
               </Button>
@@ -125,28 +163,13 @@ const App = () => {
               color="primary"
               aria-label="outlined primary button group"
             >
+              <NumberButton num={4} />
+              <NumberButton num={5} />
+              <NumberButton num={6} />
               <Button
-                onClick={() => numberClick("4")}
+                onClick={() => handleClickOperator('minus')}
                 className="number-button"
-              >
-                4
-              </Button>
-              <Button
-                onClick={() => numberClick("5")}
-                className="number-button"
-              >
-                5
-              </Button>
-              <Button
-                onClick={() => numberClick("6")}
-                className="number-button"
-              >
-                6
-              </Button>
-              <Button
-                onClick={() => signClick(calculation, addToValue, "-")}
-                className="number-button"
-                disabled={sign === true}
+                // disabled={sign === true}
               >
                 -
               </Button>
@@ -157,28 +180,13 @@ const App = () => {
               color="primary"
               aria-label="outlined primary button group"
             >
+              <NumberButton num={1} />
+              <NumberButton num={2} />
+              <NumberButton num={3} />
               <Button
-                onClick={() => numberClick("1")}
+                onClick={() => handleClickOperator('multiply')}
                 className="number-button"
-              >
-                1
-              </Button>
-              <Button
-                onClick={() => numberClick("2")}
-                className="number-button"
-              >
-                2
-              </Button>
-              <Button
-                onClick={() => numberClick("3")}
-                className="number-button"
-              >
-                3
-              </Button>
-              <Button
-                onClick={() => signClick(calculation, addToValue, "*")}
-                className="number-button"
-                disabled={sign === true}
+                // disabled={sign === true}
               >
                 *
               </Button>
@@ -189,31 +197,25 @@ const App = () => {
               color="primary"
               aria-label="outlined primary button group"
             >
-              <Button
-                onClick={() => numberClick(".")}
-                className="number-button"
-              >
-                .
-              </Button>
-              <Button
-                onClick={() => numberClick("0")}
-                className="number-button"
-              >
-                0
-              </Button>
+              <NumberButton num="." />
+              <NumberButton num={0} />
               <Button
                 onClick={() => {
-                  equalClick(calculation, addToValue, "=");
+                  handleCalculate(
+                    Number(firstNum),
+                    Number(secondNum),
+                    operator,
+                  );
                 }}
                 className="number-button"
-                disabled={sign === true}
+                // disabled={sign === true}
               >
                 =
               </Button>
               <Button
-                onClick={() => signClick(calculation, addToValue, "/")}
+                onClick={() => handleClickOperator('divide')}
                 className="number-button"
-                disabled={sign === true}
+                // disabled={sign === true}
               >
                 /
               </Button>
@@ -222,15 +224,12 @@ const App = () => {
               color="primary"
               aria-label="outlined primary button group"
             >
-              <Button
-                onClick={() => numberClick("reset")}
-                className="number-button"
-              >
+              <Button onClick={() => handleReset()} className="number-button">
                 reset
               </Button>
             </ButtonGroup>
           </div>
-        </NumberButton>
+        </NumberButtonGroup>
       </Container>
     </Root>
   );
